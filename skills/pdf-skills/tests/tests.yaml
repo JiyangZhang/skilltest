@@ -1,0 +1,27 @@
+skill_name: pdf
+schema_version: 1
+
+tests:
+  - id: 1
+    prompt: |
+      How many pages does input/guide.pdf have?
+      Just tell me the number.
+    input_dir: tests/input          # contents mounted at input/ inside the container
+    expectations:
+      - text: Output mentions the correct page count (3)
+        oracle: pytest
+        pytest_path: tests/pytests/test_page_count.py
+
+  - id: 2
+    prompt: |
+      Merge input/chapter1.pdf and input/chapter2.pdf into a single file.
+      Save the result as output/artifacts/merged.pdf.
+    input_dir: tests/input
+    expectations:
+      - text: merged.pdf exists in artifacts
+        oracle: pytest
+        pytest_path: tests/pytests/test_merge.py
+      - text: Two PDFs are merged successfully including content from both source PDFs
+        oracle: agent-judge
+        rubric:
+          - merged.pdf exists and includes content from both source PDFs

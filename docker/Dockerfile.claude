@@ -1,0 +1,39 @@
+# SkillTest — minimal base image with Claude Code CLI and Python.
+#
+# This image is intentionally lean: it contains only the Claude Code CLI and
+# a bare Python installation. Skill-specific dependencies belong in a
+# skill-level Dockerfile that extends this image, not here.
+#
+# Build (from the repository root):
+#   docker build -t skilltest-claude:latest -f docker/Dockerfile.claude docker/
+#
+# Extend for your skill:
+#   FROM skilltest-claude:latest
+#   RUN pip3 install --break-system-packages pypdf pandas
+
+FROM debian:bookworm-slim
+
+# System dependencies
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates bash coreutils curl \
+        nodejs npm \
+        python3 python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Claude Code CLI
+RUN npm install -g @anthropic-ai/claude-code
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Shared home dir accessible to any uid passed via --user at runtime.
+# Claude Code requires a writable HOME and refuses --dangerously-skip-permissions as root.
+# We run the container as the host user's uid (--user $(id -u):$(id -g)) so that
+# bind-mounted workspace dirs are writable, and this HOME is available to that uid.
+RUN mkdir -p /home/agent && chmod 1777 /home/agent
+ENV HOME=/home/agent
+
+WORKDIR /workspace
+
+ENTRYPOINT ["/entrypoint.sh"]

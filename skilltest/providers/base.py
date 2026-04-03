@@ -1,0 +1,6 @@
+from typing import Protocol, runtime_checkable
+
+@runtime_checkable
+class SkillTestProvider(Protocol):
+    def complete(self, system: str, user: str, max_tokens: int = 1024) -> str: ...
+    def model_id(self) -> str: ...

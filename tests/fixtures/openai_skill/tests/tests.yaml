@@ -1,0 +1,8 @@
+skill_name: openai-test-skill
+
+tests:
+  - id: 1
+    prompt: Test prompt for openai skill
+    expectations:
+      - text: The output addresses the user request
+        oracle: agent-judge

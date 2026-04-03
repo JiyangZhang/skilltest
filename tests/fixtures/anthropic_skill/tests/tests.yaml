@@ -1,0 +1,8 @@
+skill_name: test-skill
+
+tests:
+  - id: 1
+    prompt: Test prompt
+    expectations:
+      - text: The output is a valid JSON object
+        oracle: agent-judge
