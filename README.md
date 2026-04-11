@@ -25,6 +25,21 @@ my-skill/
 
 SkillTest automates the full test cycle — loading the skill, invoking the agent via Docker to finish some task with the skill, grading the agent's output, and reporting results — so you get the same fast feedback loop for agent skills that you get for ordinary code.
 
+Here is a test that tests the agent correctly counts the pdf page with the skill `pdf`:
+
+```yaml
+# tests/tests.yaml
+skill_name: pdf  # the skill under test
+tests:
+  - name: page-count
+    prompt: How many pages does input/guide.pdf have? Just tell me the number.
+    input_dir: tests/input
+    expectations:
+      - text: Agent reports the correct page count (3)
+        oracle: pytest
+        pytest_path: tests/pytests/test_page_count.py
+```
+
 > **Agent runtime:** SkillTest currently runs agents using **Claude Code** inside Docker. Support for additional agent runtimes (Gemini CLI, OpenClaw) is on the roadmap.
 
 ---
@@ -64,7 +79,7 @@ cd skills/pdf-skills
 skilltest run . --docker-image skilltest-pdf:latest --agent-model claude-haiku-4-5-20251001 --judge-model claude-haiku-4-5-20251001
 ```
 
-SkillTest will spin up a Docker container per test case, run the Claude Code agent, grade each expectation, and write results to `skilltest-results/` inside the skill directory:
+SkillTest will spin up a Docker container per test case, run the Claude Code agent, grade each expectation, and write results to `skills/pdf-skills/skilltest-results/`:
 
 ```
 skills/pdf-skills/
@@ -77,7 +92,7 @@ skills/pdf-skills/
 Open the dashboard:
 
 ```bash
-open skilltest-results/report.html
+open skills/pdf-skills/skilltest-results/report.html
 ```
 
 **Options:**
@@ -144,7 +159,7 @@ skill_name: pdf
 schema_version: 1
 
 tests:
-  - id: 1
+  - name: page-count
     prompt: |
       How many pages does input/guide.pdf have?
       Just tell me the number.
@@ -154,7 +169,7 @@ tests:
         oracle: pytest
         pytest_path: tests/pytests/test_page_count.py
 
-  - id: 2
+  - name: merge-pdfs
     prompt: |
       Merge input/chapter1.pdf and input/chapter2.pdf into a single file.
       Save the result as output/artifacts/merged.pdf.
@@ -175,7 +190,7 @@ Test case 1 has one expectation graded by a pytest file. Test case 2 has two exp
 
 | Field | Description |
 |---|---|
-| `id` | Integer. Unique within the suite. |
+| `name` | String. Unique within the suite (e.g. `page-count`, `merge-pdfs`). |
 | `prompt` | The task sent to the agent verbatim. |
 | `input_dir` | Path relative to skill root; its contents are copied to `input/` inside the container. |
 | `expectations` | List of graded criteria — see below. |
@@ -289,11 +304,10 @@ Omit `pytest_path` to run the entire `tests/pytests/` directory.
 
 ## 📊 Output
 
-Run from inside the skill directory so results land next to the skill:
+Results are written to `skilltest-results/` inside the skill directory by default, regardless of where you invoke the command:
 
 ```bash
-cd skills/pdf-skills
-skilltest run .
+skilltest run skills/pdf-skills
 # → writes to skills/pdf-skills/skilltest-results/
 ```
 
@@ -324,7 +338,7 @@ skilltest run <skill-dir> [options]
 
 | Option | Default | Purpose |
 |---|---|---|
-| `--output DIR` | `skilltest-results/` | Where to write results. |
+| `--output DIR` | `<skill-dir>/skilltest-results/` | Where to write results. |
 | `--agent-model NAME` | image default | Claude model for the agent inside Docker. |
 | `--judge-model NAME` | Claude default | Claude model for `agent-judge` grading. |
 | `--docker-image NAME` | `skilltest-claude:latest` | Docker image to use (or `SKILLTEST_DOCKER_IMAGE` env). |
@@ -392,46 +406,4 @@ skilltest run ./my-skill --docker-image my-skill:latest
 
 This is an opt-in. The default (`skilltest-claude:latest`) works for any skill without extra setup.
 
----
-
-## 📁 Project layout
-
-```
-skilltest/                    ← Python package
-├── cli.py                    ← Typer CLI entry point
-├── models.py                 ← Pydantic models (TestCase, TestSuite, GradingReport, …)
-├── parser.py                 ← SKILL.md → CanonicalSkill
-├── loader.py                 ← tests/tests.yaml → TestSuite
-├── runner.py                 ← Orchestrates a full test suite run
-├── docker_runner.py          ← Claude Code in Docker
-├── grader.py                 ← pytest oracle + agent-judge oracle (Docker isolated)
-├── pytest_runner.py          ← Subprocess pytest execution; env injection
-├── run_bundle.py             ← Per-test workspace layout and artifacts
-├── writer.py                 ← JSON, JUnit XML, and HTML report serialization
-├── executor.py               ← API task execution (used by coverage analysis)
-├── coverage.py               ← Ablation-based coverage analysis
-├── diff.py                   ← grading.json comparison
-└── providers/
-    ├── base.py
-    ├── anthropic_provider.py
-    ├── openai_provider.py
-    └── local_provider.py
-
-docker/                       ← Shared Dockerfile and entrypoint
-
-skills/                       ← Skills library
-├── pdf-skills/               ← PDF processing skill (merge, split, extract, OCR, …)
-│   ├── SKILL.md
-│   └── tests/
-│       ├── tests.yaml
-│       ├── input/            ← Sample PDF files
-│       └── pytests/
-│           ├── conftest.py
-│           ├── test_merge.py
-│           └── test_page_count.py
-└── write-skilltest-pytests/  ← Skill for generating SkillTest pytest files
-    └── SKILL.md
-
-tests/                        ← SkillTest's own unit tests (no live API calls)
-```
 

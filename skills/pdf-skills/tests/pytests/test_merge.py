@@ -23,9 +23,8 @@ def test_merged_pdf_has_three_pages():
     artifacts = Path(os.environ["SKILLTEST_ARTIFACTS_DIR"])
     merged = artifacts / "merged.pdf"
     if not merged.exists():
-        pytest_skip_msg = "merged.pdf not found — skipping page count check"
         import pytest
-        pytest.skip(pytest_skip_msg)
+        pytest.skip("merged.pdf not found — skipping page count check")
 
     from pypdf import PdfReader
     reader = PdfReader(str(merged))

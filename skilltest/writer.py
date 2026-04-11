@@ -23,9 +23,9 @@ def _oracle_badge(oracle: str) -> str:
     return f'<span class="badge" style="background:{color}">{oracle}</span>'
 
 
-def _read_run_bundle(runs_dir: Path, test_id: int) -> tuple[str | None, str | None]:
+def _read_run_bundle(runs_dir: Path, test_name: str) -> tuple[str | None, str | None]:
     """Return (prompt, agent_output) from the run bundle, or (None, None) if not found."""
-    run_dir = runs_dir / f"test-{test_id}"
+    run_dir = runs_dir / f"test-{test_name}"
 
     prompt = None
     prompt_file = run_dir / "prompt.txt"
@@ -44,13 +44,13 @@ def _read_run_bundle(runs_dir: Path, test_id: int) -> tuple[str | None, str | No
 
 
 def _render_test_cards(
-    by_test: dict[int, list[dict]],
+    by_test: dict[str, list[dict]],
     runs_dir: Path | None = None,
 ) -> str:
-    """Render one card per test_id. Enriches with run bundle data when runs_dir is given."""
+    """Render one card per test name. Enriches with run bundle data when runs_dir is given."""
     cards = ""
-    for test_id in sorted(by_test):
-        exps = by_test[test_id]
+    for test_name in sorted(by_test):
+        exps = by_test[test_name]
         tc_pass = sum(1 for e in exps if e.get("passed"))
         tc_total = len(exps)
         header_color = "#166534" if tc_pass == tc_total else "#991b1b"
@@ -59,7 +59,7 @@ def _render_test_cards(
 
         prompt, agent_output = (None, None)
         if runs_dir is not None:
-            prompt, agent_output = _read_run_bundle(runs_dir, test_id)
+            prompt, agent_output = _read_run_bundle(runs_dir, test_name)
 
         rows = ""
         for e in exps:
@@ -96,7 +96,7 @@ def _render_test_cards(
         cards += f"""
     <div class="card">
       <div class="card-header" style="border-left:4px solid {header_color}">
-        <span class="card-title">{icon} Test {test_id}</span>
+        <span class="card-title">{icon} {_escape(test_name)}</span>
         <span class="card-meta">{tc_pass}/{tc_total} passed · {total_ms / 1000:.1f}s</span>
       </div>
       {prompt_section}
@@ -327,7 +327,7 @@ def write_grading(report: GradingReport, output_dir: Path, skill_name: str = "sk
         "skill_name": skill_name,
         "expectations": [
             {
-                "test_id": r.test_id,
+                "test_name": r.test_name,
                 "text": r.text,
                 "passed": r.passed,
                 "evidence": r.evidence,
@@ -352,9 +352,9 @@ def write_html_report(report: GradingReport, output_dir: Path, skill_name: str =
     """Write report.html during a live run (has access to run bundles in output_dir)."""
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    by_test: dict[int, list[dict]] = defaultdict(list)
+    by_test: dict[str, list[dict]] = defaultdict(list)
     for r in report.expectations:
-        by_test[r.test_id].append({
+        by_test[r.test_name].append({
             "text": r.text,
             "passed": r.passed,
             "evidence": r.evidence,
@@ -391,9 +391,9 @@ def write_html_report_from_json(grading_json: Path, output_dir: Path) -> Path:
     execution_metrics = data.get("execution_metrics", {})
     timing = data.get("timing", {})
 
-    by_test: dict[int, list[dict]] = defaultdict(list)
+    by_test: dict[str, list[dict]] = defaultdict(list)
     for e in data.get("expectations", []):
-        by_test[e["test_id"]].append(e)
+        by_test[e["test_name"]].append(e)
 
     # agent-runs/ sits next to grading.json
     runs_dir = grading_json.parent / "agent-runs"
@@ -441,7 +441,7 @@ def _write_junit_xml(report: GradingReport, output_dir: Path, skill_name: str) -
 
     for r in report.expectations:
         tc = ET.SubElement(testsuite, "testcase", {
-            "name": f"[Test {r.test_id}] {r.text}",
+            "name": f"[{r.test_name}] {r.text}",
             "classname": skill_name,
             "time": f"{r.duration_ms / 1000:.3f}",
         })

@@ -66,10 +66,10 @@ def run_suite(
     all_metrics: list[ExecutionMetrics] = []
 
     for test_case in test_suite.tests:
-        console.rule(f"Test {test_case.id}")
+        console.rule(f"Test {test_case.name}")
 
         if test_case.setup:
-            _execute_steps(test_case.setup, skill_dir, run_dir=runs_base / f"test-{test_case.id}")
+            _execute_steps(test_case.setup, skill_dir, run_dir=runs_base / f"test-{test_case.name}")
 
         try:
             output, metrics = _run_test_docker(
@@ -87,7 +87,7 @@ def run_suite(
             preview = output[:100].replace("\n", " ") if output else "(empty)"
             console.print(f"  Output: {preview}{'...' if len(output) > 100 else ''}")
 
-            run_dir_for_grade = runs_base / f"test-{test_case.id}"
+            run_dir_for_grade = runs_base / f"test-{test_case.name}"
             artifacts_dir = None
             try:
                 bundle = read_run_bundle(run_dir_for_grade)
@@ -101,7 +101,7 @@ def run_suite(
                     exp,
                     output,
                     test_case.prompt,
-                    test_case.id,
+                    test_case.name,
                     skill_path=skill_dir,
                     artifacts_dir=artifacts_dir,
                     run_dir=run_dir_for_grade,
@@ -117,14 +117,14 @@ def run_suite(
                     console.print(f"       → {result.evidence}")
         finally:
             if test_case.cleanup:
-                _execute_steps(test_case.cleanup, skill_dir, run_dir=runs_base / f"test-{test_case.id}")
+                _execute_steps(test_case.cleanup, skill_dir, run_dir=runs_base / f"test-{test_case.name}")
 
         n_passed = sum(1 for r in exp_results if r.passed)
         n_total = len(exp_results)
         pass_rate = n_passed / n_total if n_total > 0 else 0.0
         test_results.append(
             TestResult(
-                test_id=test_case.id,
+                test_name=test_case.name,
                 prompt=test_case.prompt,
                 output=output,
                 expectation_results=exp_results,
@@ -174,7 +174,7 @@ def _run_test_docker(
 ) -> tuple[str, ExecutionMetrics]:
     import time
 
-    run_root = runs_base / f"test-{test_case.id}"
+    run_root = runs_base / f"test-{test_case.name}"
     input_src = None
     if test_case.input_dir:
         input_src = skill_dir / test_case.input_dir
@@ -203,7 +203,7 @@ def _run_test_docker(
 
     write_manifest(
         run_root,
-        test_id=test_case.id,
+        test_name=test_case.name,
         exit_code=proc.returncode,
         docker_image=docker_image,
     )
@@ -287,5 +287,5 @@ def _print_summary(report: GradingReport, console: Console):
     console.print(f"{'='*50}\n")
     for r in report.expectations:
         if not r.passed:
-            console.print(f"  ✗ [Test {r.test_id}] {r.text}")
+            console.print(f"  ✗ [{r.test_name}] {r.text}")
             console.print(f"    → {r.evidence}")

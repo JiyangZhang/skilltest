@@ -64,7 +64,7 @@ class TestConstraints(BaseModel):
 
 
 class TestCase(BaseModel):
-    id: int
+    name: str
     prompt: str = ""
     expected_output: str = ""
     files: list[str] = Field(default_factory=list)
@@ -84,7 +84,7 @@ class TestSuite(BaseModel):
 
 
 class ExpectationResult(BaseModel):
-    test_id: int
+    test_name: str
     text: str
     passed: bool
     evidence: str
@@ -104,7 +104,7 @@ class ExecutionMetrics(BaseModel):
 
 
 class TestResult(BaseModel):
-    test_id: int
+    test_name: str
     prompt: str
     output: str
     expectation_results: list[ExpectationResult]
@@ -124,8 +124,8 @@ class SectionCoverageResult(BaseModel):
     section_id: str
     heading_path: list[str]
     coverage_score: float
-    tests_covered: list[int]
-    tests_tested: list[int]
+    tests_covered: list[str]
+    tests_tested: list[str]
     verdict: str
     recommendation: str
 
@@ -139,7 +139,7 @@ class CoverageReport(BaseModel):
 
 
 class ExpectationDiff(BaseModel):
-    test_id: int
+    test_name: str
     text: str
     before: bool
     after: bool

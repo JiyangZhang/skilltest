@@ -158,7 +158,7 @@ def grade_expectation(
     expectation: Expectation,
     output: str,
     prompt: str,
-    test_id: int,
+    test_name: str,
     skill_path: Path | None = None,
     artifacts_dir: Path | None = None,
     run_dir: Path | None = None,
@@ -175,7 +175,7 @@ def grade_expectation(
         if expectation.pytest_path is None:
             if skill_path is None:
                 return ExpectationResult(
-                    test_id=test_id, text=expectation.text, passed=False,
+                    test_name=test_name, text=expectation.text, passed=False,
                     evidence="pytest oracle requires skill_path; none provided",
                     oracle_used=oracle_used,
                     duration_ms=round((time.perf_counter() - t0) * 1000, 1),
@@ -208,7 +208,7 @@ def grade_expectation(
 
     else:
         return ExpectationResult(
-            test_id=test_id,
+            test_name=test_name,
             text=expectation.text,
             passed=False,
             evidence=f"Unsupported oracle: {expectation.oracle!r}",
@@ -217,7 +217,7 @@ def grade_expectation(
         )
 
     return ExpectationResult(
-        test_id=test_id,
+        test_name=test_name,
         text=expectation.text,
         passed=passed,
         evidence=evidence,

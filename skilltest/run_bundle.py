@@ -66,14 +66,14 @@ def read_run_bundle(run_root: Path) -> RunBundle:
 def write_manifest(
     run_root: Path,
     *,
-    test_id: int,
+    test_name: str,
     exit_code: int,
     docker_image: str | None = None,
 ) -> None:
     path = run_root / MANIFEST_REL
     path.parent.mkdir(parents=True, exist_ok=True)
     data = {
-        "test_id": test_id,
+        "test_name": test_name,
         "exit_code": exit_code,
         "docker_image": docker_image,
     }

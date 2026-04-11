@@ -22,7 +22,7 @@ def grade_full(skill: CanonicalSkill, eval_case, provider, n_runs: int,
     for _ in range(n_runs):
         output, _ = run_task(skill, eval_case.prompt, provider)
         passed_all = all(
-            grade_expectation(exp, output, eval_case.prompt, eval_case.id, provider, skill_dir).passed
+            grade_expectation(exp, output, eval_case.prompt, eval_case.name, provider, skill_dir).passed
             for exp in eval_case.expectations
         )
         results.append(passed_all)
@@ -38,7 +38,7 @@ def grade_ablated(skill: CanonicalSkill, section: SkillSection,
         output, _ = run_task(skill, eval_case.prompt, provider,
                              skill_body_override=ablated_body)
         passed_all = all(
-            grade_expectation(exp, output, eval_case.prompt, eval_case.id, provider, skill_dir).passed
+            grade_expectation(exp, output, eval_case.prompt, eval_case.name, provider, skill_dir).passed
             for exp in eval_case.expectations
         )
         results.append(passed_all)
@@ -78,9 +78,9 @@ def run_coverage(
             total_calls += n_runs
             stable_ablated = majority(ablated_outcomes)
 
-            tests_tested.append(test_case.id)
+            tests_tested.append(test_case.name)
             if stable_full != stable_ablated:
-                tests_covered.append(test_case.id)
+                tests_covered.append(test_case.name)
 
         n_covered = len(tests_covered)
         n_tested = len(tests_tested)

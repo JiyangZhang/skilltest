@@ -49,12 +49,14 @@ def load_tests(skill_path: Path, tests_path: Path | None = None) -> TestSuite:
                     rubric=e.get("rubric", []),
                 ))
 
+        test_name = str(item["name"])
+
         task_file = item.get("task_file")
         prompt_inline = item.get("prompt", "") or ""
         if task_file:
             tf = skill_dir / task_file
             if not tf.is_file():
-                raise ValueError(f"task_file not found for test {item.get('id')}: {tf}")
+                raise ValueError(f"task_file not found for test {test_name!r}: {tf}")
             text_from_file = tf.read_text(encoding="utf-8")
             if prompt_inline.strip():
                 merged_prompt = text_from_file.strip() + "\n\n" + prompt_inline.strip()
@@ -63,7 +65,7 @@ def load_tests(skill_path: Path, tests_path: Path | None = None) -> TestSuite:
         else:
             if not str(prompt_inline).strip():
                 raise ValueError(
-                    f"test id {item.get('id')}: provide non-empty 'prompt' and/or 'task_file'"
+                    f"test {test_name!r}: provide non-empty 'prompt' and/or 'task_file'"
                 )
             merged_prompt = prompt_inline
 
@@ -71,7 +73,7 @@ def load_tests(skill_path: Path, tests_path: Path | None = None) -> TestSuite:
         if input_dir:
             idp = skill_dir / input_dir
             if not idp.is_dir():
-                raise ValueError(f"input_dir is not a directory for test {item.get('id')}: {idp}")
+                raise ValueError(f"input_dir is not a directory for test {test_name!r}: {idp}")
 
         setup = _parse_setup_steps(item.get("setup", []))
         cleanup = _parse_setup_steps(item.get("cleanup", []))
@@ -80,7 +82,7 @@ def load_tests(skill_path: Path, tests_path: Path | None = None) -> TestSuite:
         constraints = TestConstraints(**constraints_raw) if constraints_raw else None
 
         test_cases.append(TestCase(
-            id=item["id"],
+            name=test_name,
             prompt=merged_prompt,
             expected_output=item.get("expected_output", ""),
             files=item.get("files", []),

@@ -2,7 +2,7 @@ skill_name: pdf
 schema_version: 1
 
 tests:
-  - id: 1
+  - name: page-count
     prompt: |
       How many pages does input/guide.pdf have?
       Just tell me the number.
@@ -12,7 +12,7 @@ tests:
         oracle: pytest
         pytest_path: tests/pytests/test_page_count.py
 
-  - id: 2
+  - name: merge-pdfs
     prompt: |
       Merge input/chapter1.pdf and input/chapter2.pdf into a single file.
       Save the result as output/artifacts/merged.pdf.

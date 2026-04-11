@@ -16,10 +16,10 @@ def test_regression_detected():
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         before = make_grading(tmp, "before.json", [
-            {"test_id": 1, "text": "output is correct", "passed": True, "evidence": "ok"}
+            {"test_name": "t", "text": "output is correct", "passed": True, "evidence": "ok"}
         ])
         after = make_grading(tmp, "after.json", [
-            {"test_id": 1, "text": "output is correct", "passed": False, "evidence": "fail"}
+            {"test_name": "t", "text": "output is correct", "passed": False, "evidence": "fail"}
         ])
         report = diff_reports(before, after)
         assert len(report.regressions) == 1
@@ -31,10 +31,10 @@ def test_fix_detected():
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         before = make_grading(tmp, "before.json", [
-            {"test_id": 1, "text": "output is correct", "passed": False, "evidence": "fail"}
+            {"test_name": "t", "text": "output is correct", "passed": False, "evidence": "fail"}
         ])
         after = make_grading(tmp, "after.json", [
-            {"test_id": 1, "text": "output is correct", "passed": True, "evidence": "ok"}
+            {"test_name": "t", "text": "output is correct", "passed": True, "evidence": "ok"}
         ])
         report = diff_reports(before, after)
         assert len(report.fixes) == 1
@@ -46,10 +46,10 @@ def test_stable_passes_counted():
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         before = make_grading(tmp, "before.json", [
-            {"test_id": 1, "text": "output is correct", "passed": True, "evidence": "ok"}
+            {"test_name": "t", "text": "output is correct", "passed": True, "evidence": "ok"}
         ])
         after = make_grading(tmp, "after.json", [
-            {"test_id": 1, "text": "output is correct", "passed": True, "evidence": "ok"}
+            {"test_name": "t", "text": "output is correct", "passed": True, "evidence": "ok"}
         ])
         report = diff_reports(before, after)
         assert report.stable_passes == 1
@@ -62,10 +62,10 @@ def test_stable_fails_counted():
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         before = make_grading(tmp, "before.json", [
-            {"test_id": 1, "text": "output is correct", "passed": False, "evidence": "fail"}
+            {"test_name": "t", "text": "output is correct", "passed": False, "evidence": "fail"}
         ])
         after = make_grading(tmp, "after.json", [
-            {"test_id": 1, "text": "output is correct", "passed": False, "evidence": "fail"}
+            {"test_name": "t", "text": "output is correct", "passed": False, "evidence": "fail"}
         ])
         report = diff_reports(before, after)
         assert report.stable_fails == 1
@@ -77,14 +77,14 @@ def test_net_change_arithmetic():
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         before = make_grading(tmp, "before.json", [
-            {"test_id": 1, "text": "check A", "passed": True, "evidence": "ok"},
-            {"test_id": 2, "text": "check B", "passed": False, "evidence": "fail"},
-            {"test_id": 3, "text": "check C", "passed": False, "evidence": "fail"},
+            {"test_name": "a", "text": "check A", "passed": True, "evidence": "ok"},
+            {"test_name": "b", "text": "check B", "passed": False, "evidence": "fail"},
+            {"test_name": "c", "text": "check C", "passed": False, "evidence": "fail"},
         ])
         after = make_grading(tmp, "after.json", [
-            {"test_id": 1, "text": "check A", "passed": False, "evidence": "broke"},
-            {"test_id": 2, "text": "check B", "passed": True, "evidence": "fixed"},
-            {"test_id": 3, "text": "check C", "passed": True, "evidence": "fixed"},
+            {"test_name": "a", "text": "check A", "passed": False, "evidence": "broke"},
+            {"test_name": "b", "text": "check B", "passed": True, "evidence": "fixed"},
+            {"test_name": "c", "text": "check C", "passed": True, "evidence": "fixed"},
         ])
         report = diff_reports(before, after)
         assert len(report.regressions) == 1

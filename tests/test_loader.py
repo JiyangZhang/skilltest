@@ -22,7 +22,7 @@ def test_valid_tests_loads():
         skill_path = write_tests(tmp, {
             "skill_name": "my-skill",
             "tests": [{
-                "id": 1,
+                "name": "first-test",
                 "prompt": "test prompt",
                 "expectations": [{"text": "output is valid", "oracle": "agent-judge"}]
             }]
@@ -30,14 +30,14 @@ def test_valid_tests_loads():
         suite = load_tests(skill_path)
         assert suite.skill_name == "my-skill"
         assert len(suite.tests) == 1
-        assert suite.tests[0].id == 1
+        assert suite.tests[0].name == "first-test"
 
 
 def test_missing_skill_name_raises():
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         skill_path = write_tests(tmp, {
-            "tests": [{"id": 1, "prompt": "test"}]
+            "tests": [{"name": "t", "prompt": "test"}]
         })
         with pytest.raises(ValueError, match="skill_name"):
             load_tests(skill_path)
@@ -49,7 +49,7 @@ def test_dict_expectation_format():
         skill_path = write_tests(tmp, {
             "skill_name": "my-skill",
             "tests": [{
-                "id": 1,
+                "name": "t",
                 "prompt": "test",
                 "expectations": [{"text": "check this", "oracle": "agent-judge"}]
             }]
@@ -72,7 +72,7 @@ def test_task_file_and_prompt_merge(tmp_path):
     (skill_path / "tests" / "tests.yaml").write_text(
         "skill_name: x\n"
         "tests:\n"
-        "  - id: 1\n"
+        "  - name: t\n"
         "    task_file: tests/task.md\n"
         "    prompt: Extra\n"
         "    expectations: []\n",
@@ -93,7 +93,7 @@ def test_input_dir_must_exist(tmp_path):
     (skill_path / "tests" / "tests.yaml").write_text(
         "skill_name: x\n"
         "tests:\n"
-        "  - id: 1\n"
+        "  - name: t\n"
         "    prompt: p\n"
         "    input_dir: tests/missing\n"
         "    expectations: []\n",
@@ -113,7 +113,7 @@ def test_setup_shell_string_is_parsed(tmp_path):
     write_tests(tmp_path, {
         "skill_name": "my-skill",
         "tests": [{
-            "id": 1,
+            "name": "t",
             "prompt": "p",
             "setup": ["echo hello"],
             "expectations": [],
@@ -129,7 +129,7 @@ def test_setup_file_dict_is_parsed(tmp_path):
     write_tests(tmp_path, {
         "skill_name": "my-skill",
         "tests": [{
-            "id": 1,
+            "name": "t",
             "prompt": "p",
             "setup": [{"file": "input/data.txt", "content": "test data"}],
             "expectations": [],
@@ -146,7 +146,7 @@ def test_cleanup_steps_are_parsed(tmp_path):
     write_tests(tmp_path, {
         "skill_name": "my-skill",
         "tests": [{
-            "id": 1,
+            "name": "t",
             "prompt": "p",
             "cleanup": [{"shell": "rm -f /tmp/test-artifact"}],
             "expectations": [],
@@ -160,7 +160,7 @@ def test_constraints_are_parsed(tmp_path):
     write_tests(tmp_path, {
         "skill_name": "my-skill",
         "tests": [{
-            "id": 1,
+            "name": "t",
             "prompt": "p",
             "constraints": {"timeout_seconds": 30, "max_steps": 5},
             "expectations": [],
@@ -177,7 +177,7 @@ def test_constraints_partial_fields(tmp_path):
     write_tests(tmp_path, {
         "skill_name": "my-skill",
         "tests": [{
-            "id": 1,
+            "name": "t",
             "prompt": "p",
             "constraints": {"timeout_seconds": 60},
             "expectations": [],
@@ -192,7 +192,7 @@ def test_constraints_partial_fields(tmp_path):
 def test_no_constraints_field_is_none(tmp_path):
     write_tests(tmp_path, {
         "skill_name": "my-skill",
-        "tests": [{"id": 1, "prompt": "p", "expectations": []}],
+        "tests": [{"name": "t", "prompt": "p", "expectations": []}],
     })
     suite = load_tests(tmp_path)
     assert suite.tests[0].constraints is None
@@ -202,7 +202,7 @@ def test_unknown_oracle_rejected(tmp_path):
     write_tests(tmp_path, {
         "skill_name": "my-skill",
         "tests": [{
-            "id": 1,
+            "name": "t",
             "prompt": "p",
             "expectations": [{"text": "check", "oracle": "deterministic"}],
         }],
@@ -215,7 +215,7 @@ def test_rubric_is_parsed(tmp_path):
     write_tests(tmp_path, {
         "skill_name": "my-skill",
         "tests": [{
-            "id": 1,
+            "name": "t",
             "prompt": "p",
             "expectations": [{
                 "text": "response quality",

@@ -18,7 +18,7 @@ _DEFAULT_OUTPUT = Path("skilltest-results")
 def run(
     skill: Annotated[Path, typer.Argument(help="Path to skill directory")],
     tests: Annotated[Optional[Path], typer.Option(help="Path to tests.json")] = None,
-    output: Annotated[Path, typer.Option(help="Output directory")] = _DEFAULT_OUTPUT,
+    output: Annotated[Optional[Path], typer.Option(help="Output directory (default: <skill-dir>/skilltest-results/)")] = None,
     min_pass_rate: Annotated[float, typer.Option(help="Minimum pass rate (CI gate)")] = 0.0,
     docker_image: Annotated[Optional[str], typer.Option(help="Override Docker image (default: env SKILLTEST_DOCKER_IMAGE or skilltest-claude:latest)")] = None,
     run_workspace: Annotated[Optional[Path], typer.Option(help="Host directory for per-test run bundles (default: <output>/agent-runs)")] = None,
@@ -30,6 +30,9 @@ def run(
     from skilltest.parser import parse_skill
     from skilltest.runner import run_suite
     from skilltest.writer import write_grading, write_html_report
+
+    skill_dir = skill if skill.is_dir() else skill.parent
+    output = output or (skill_dir / "skilltest-results")
 
     skill_name = parse_skill(skill).name
     report = run_suite(
@@ -89,11 +92,11 @@ def diff(
     if report.regressions:
         console.print(f"\n[red]Regressions ({len(report.regressions)}):[/red]")
         for r in report.regressions:
-            console.print(f"  ✗ [Test {r.test_id}] {r.text}")
+            console.print(f"  ✗ [{r.test_name}] {r.text}")
     if report.fixes:
         console.print(f"\n[green]Fixes ({len(report.fixes)}):[/green]")
         for f in report.fixes:
-            console.print(f"  ✓ [Test {f.test_id}] {f.text}")
+            console.print(f"  ✓ [{f.test_name}] {f.text}")
 
     console.print(f"\nStable passes: {report.stable_passes}")
     console.print(f"Stable fails:  {report.stable_fails}")
@@ -177,7 +180,7 @@ def init(
             "schema_version": 1,
             "skill_name": name,
             "tests": [{
-                "id": 1,
+                "name": "example",
                 "prompt": "Example prompt that should trigger this skill",
                 "expectations": [
                     {"text": "Pre-written pytest checks under tests/pytests pass", "oracle": "pytest"},
